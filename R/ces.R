@@ -14,7 +14,8 @@ clean_ces <- function(policy_df,
            immig_wall = if_else(immig_wall == 1, 2, 1),
            trade_china = if_else(trade_china == 1, 2, 1),
            trade_canmex_include = if_else(trade_canmex_include == 1, 2, 1)) %>% 
-    select(all_of(policy_vars))
+    select(year, cd, county_fips, ideo5, sex, age, race_h, educ,
+           all_of(policy_vars))
     
   return(out_df)
 }
