@@ -3,12 +3,23 @@ library(targets)
 
 tar_option_set(
   packages = c("dplyr",
-               "here")
+               "tidyr",
+               "purrr",
+               "here",
+               "brms",
+               "tidybayes",
+               "stringr",
+               "ccesMRPprep",
+               "ipumsr")
 )
 
 tar_source()
 
 list(
+  tar_target(
+    data_years,
+    2021:2022
+  ),
   tar_target(
     ces_policy_file,
     here::here("data-raw", "cumulative_ces_policy_preferences.tab"),
@@ -41,9 +52,7 @@ list(
       "healthcare_medicare",
       "immig_legalize",
       "immig_border",
-      "immig_wall",
-      "trade_china",
-      "trade_canmex_include"
+      "immig_wall"
     )
   ),
   tar_target(
@@ -51,6 +60,32 @@ list(
     clean_ces(ces_policy,
               ces_cumulative,
               policy_vars = ces_policy_qs,
-              years = 2017:2022)
+              years = data_years)
+  ),
+  tar_target(
+    poststrat_vars,
+    c("SEX", "AGE", "RACE", "HISPAN", "CITIZEN", "EDUC", "COUNTYFIP", "PUMA")
+  ),
+  tar_target(
+    ca_ipums,
+    load_ipums(poststrat_vars)
+  ),
+  tar_target(
+   puma_county_crosswalk_file,
+   here::here("data-raw", "geocorr2022_2405102579.csv"),
+   format = "file"
+  ),
+  tar_target(
+    puma_county_crosswalk,
+    readr::read_csv(puma_county_crosswalk_file)[-1,]
+  ),
+  tar_target(
+    ca_ipums_counties,
+    allocate_pumas_to_counties(ca_ipums,
+                               puma_county_crosswalk)
+  ),
+  tar_target(
+    poststrat_table,
+    make_poststrat_table(ca_ipums_counties)
   )
 )
