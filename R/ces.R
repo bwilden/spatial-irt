@@ -13,14 +13,17 @@ clean_ces <- function(policy_df,
            immig_border = if_else(immig_border == 1, 2, 1),
            immig_wall = if_else(immig_wall == 1, 2, 1),
            across(all_of(policy_vars), ~ . - 1),
-           rid = paste0(case_id, year)) %>% 
-    select(rid, year, st, state, cd, county_fips, ideo5, gender, age, race, 
+           participant = paste0(year, case_id)) %>% 
+    select(participant, year, st, state, cd, county_fips, ideo5, gender, age, race, 
            educ, hispanic,
-           all_of(policy_vars)) %>% 
+           all_of(policy_vars)) %>%
     pivot_longer(cols = all_of(policy_vars),
-                 names_to = "policy",
+                 names_to = "question",
                  values_to = "response") %>% 
-    ccc_std_demographics()
+    mutate(question = as.numeric(as.factor(question))) %>% 
+    ccc_std_demographics() %>% 
+    select(participant, question, county_fips, age, race, educ, gender, response) %>% 
+    tidyr::drop_na()
     
   return(out_df)
 }

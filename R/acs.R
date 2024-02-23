@@ -33,9 +33,9 @@ allocate_pumas_to_counties <- function(ipums_df, crosswalk_df) {
                 select(PUMA = puma12, county, afact), 
               by = "PUMA") %>% 
     group_by(YEAR, SERIAL) %>% 
-    mutate(county = sample(county, 1, prob = afact)) %>% 
+    mutate(county_fips = sample(county, 1, prob = afact)) %>% 
     ungroup() %>% 
-    select(-afact) %>% 
+    select(-c(afact, county)) %>% 
     distinct() %>%
     assertr::verify(nrow(.) == nrow(ipums_df))
   
@@ -52,20 +52,23 @@ make_poststrat_table <- function(ipums_df) {
                            AGE >= 45 & AGE < 65 ~ 4,
                            AGE >= 65 ~ 5,
                            .default = NA),
-           gender = SEX,
+           age = as.character(age),
+           gender = as.character(SEX),
            educ = case_when(EDUCD <= 64 & EDUCD > 1 ~ 1,
                             EDUCD <= 81 & EDUCD > 65 ~ 2,
                             EDUCD == 101 ~ 3,
                             EDUCD > 101 ~ 4,
                             .default = NA),
+           educ = as.character(educ),
            race = case_when(HISPAN > 0 ~ 3,
                             RACE == 1 ~ 1,
                             RACE == 2 ~ 2,
                             RACE == 3 ~ 5,
                             RACE %in% c(4, 5, 6) ~ 4,
-                            .default = 6)) %>% 
+                            .default = 6),
+           race = as.character(educ)) %>% 
     filter(!is.na(age), !is.na(educ)) %>%
-    group_by(county, age, gender, educ, race) %>% 
+    group_by(county_fips, age, gender, educ, race) %>% 
     summarise(n = sum(PERWT)) %>% 
     ungroup()
     

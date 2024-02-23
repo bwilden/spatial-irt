@@ -1,5 +1,6 @@
 
 library(targets)
+library(stantargets)
 
 tar_option_set(
   packages = c("dplyr",
@@ -10,10 +11,13 @@ tar_option_set(
                "tidybayes",
                "stringr",
                "ccesMRPprep",
-               "ipumsr")
+               "ipumsr"),
+  seed = 111
 )
 
-tar_source()
+options(mc.cores = 8)
+
+tar_source("R")
 
 list(
   tar_target(
@@ -62,6 +66,8 @@ list(
               policy_vars = ces_policy_qs,
               years = data_years)
   ),
+  
+  # Create poststratification table
   tar_target(
     poststrat_vars,
     c("SEX", "AGE", "RACE", "HISPAN", "CITIZEN", "EDUC", "COUNTYFIP", "PUMA")
@@ -85,7 +91,44 @@ list(
                                puma_county_crosswalk)
   ),
   tar_target(
-    poststrat_table,
+    postrat_table,
     make_poststrat_table(ca_ipums_counties)
+  ),
+  tar_target(
+    postrat_df,
+    postrat_table %>% 
+      filter(county_fips %in% ces$county_fips)
+  ),
+  
+  tar_target(
+    ideal_mrp_data_list,
+    list(J = length(unique(ces$participant)), 
+         K = length(unique(ces$question)), 
+         N = nrow(ces), 
+         C = length(unique(ces$county_fips)),
+         P = nrow(postrat_df),
+         A = length(unique(ces$age)),
+         R = length(unique(ces$race)),
+         E = length(unique(ces$educ)),
+         participant = as.numeric(as.factor(ces$participant)), 
+         question = as.numeric(ces$question), 
+         county = as.numeric(as.factor(ces$county_fips)),
+         age = as.numeric(ces$age),
+         race = as.numeric(ces$race),
+         educ = as.numeric(ces$educ),
+         gender = as.numeric(ces$gender),
+         postrat_county = as.numeric(as.factor(postrat_df$county_fips)),
+         postrat_age = as.numeric(postrat_df$age),
+         postrat_race = as.numeric(postrat_df$race),
+         postrat_educ = as.numeric(postrat_df$educ),
+         postrat_gender = as.numeric(postrat_df$gender),
+         y = ces$response)
+  ),
+  tar_stan_mcmc(
+    ideal_mrp_fit,
+    stan_file = here::here("stan", "ideal_mrp.stan"),
+    data = ideal_mrp_data_list,
+    quiet = FALSE, 
+    threads_per_chain = 2
   )
 )
