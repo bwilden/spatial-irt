@@ -21,7 +21,6 @@ load_ipums <- function(ipums_vars) {
 pad_out_geographies <- purrr::partial(
   dplyr::mutate,
   STATEFIP = str_pad(STATEFIP, width = 2, "left", pad = "0"),
-  COUNTYFIP = str_pad(COUNTYFIP, width = 3, "left", pad = "0"),
   PUMA = str_pad(PUMA, width = 5, "left", pad = "0")
 )
 
@@ -44,33 +43,58 @@ allocate_pumas_to_counties <- function(ipums_df, crosswalk_df) {
 
 
 make_poststrat_table <- function(ipums_df) {
-  poststrat_df <- ipums_df %>% 
-    filter(CITIZEN != 3) %>% 
-    mutate(age = case_when(AGE >= 18 & AGE < 25 ~ 1,
-                           AGE >= 25 & AGE < 35 ~ 2,
-                           AGE >= 35 & AGE < 45 ~ 3,
-                           AGE >= 45 & AGE < 65 ~ 4,
-                           AGE >= 65 ~ 5,
-                           .default = NA),
-           age = as.character(age),
-           gender = as.character(SEX),
-           educ = case_when(EDUCD <= 64 & EDUCD > 1 ~ 1,
-                            EDUCD <= 81 & EDUCD > 65 ~ 2,
-                            EDUCD == 101 ~ 3,
-                            EDUCD > 101 ~ 4,
+  postrat_df <- ipums_df %>% 
+    filter(CITIZEN != 3, AGE >= 18, AGE <= 110) %>% 
+    mutate(age = cut(AGE, breaks = seq(18, 110, length.out = 25)),
+           age = as.integer(age),
+           gender = as.integer(SEX),
+           educ = case_when(EDUCD < 63 ~ 1,
+                            EDUCD < 65 ~ 2,
+                            EDUCD < 101 ~ 3,
+                            EDUCD < 114 ~ 4,
+                            EDUCD < 999 ~ 5,
                             .default = NA),
-           educ = as.character(educ),
            race = case_when(HISPAN > 0 ~ 3,
                             RACE == 1 ~ 1,
                             RACE == 2 ~ 2,
                             RACE == 3 ~ 5,
                             RACE %in% c(4, 5, 6) ~ 4,
-                            .default = 6),
-           race = as.character(educ)) %>% 
-    filter(!is.na(age), !is.na(educ)) %>%
-    group_by(county_fips, age, gender, educ, race) %>% 
-    summarise(n = sum(PERWT)) %>% 
-    ungroup()
+                            RACE == 7 ~ 7,
+                            RACE %in% c(8, 9) ~ 6,
+                            .default = NA),
+           hhinc = cut(HHINCOME, breaks = c(-Inf, 2e4, 10e4, 9999998)),
+           hhinc = as.integer(hhinc)) %>% 
+    tidyr::drop_na() %>% 
+    # complete(county_fips, age, gender, educ, race, hhinc, fill = list(PERWT = 0)) %>%
+    group_by(county_fips, age, gender, educ, race, hhinc) %>%
+    summarise(n = sum(PERWT))
     
-  return(poststrat_df)
+  return(postrat_df)
+}
+
+
+calc_scaling_factor <- function(node_object) {
+  adj_matrix = sparseMatrix(
+    i = node_object$node1,
+    j = node_object$node2,
+    x = 1,
+    symmetric = TRUE
+  )
+  Q = Diagonal(node_object$group_size, rowSums(adj_matrix)) - adj_matrix
+  #Add a small jitter to the diagonal for numerical stability (optional but recommended)
+  Q_pert = Q + Diagonal(node_object$group_size) * 
+    max(diag(Q)) * sqrt(.Machine$double.eps)
+  
+  # Compute the diagonal elements of the covariance matrix subject to the 
+  # constraint that the entries of the ICAR sum to zero.
+  #See the inla.qinv function help for further details.
+  Q_inv = inla.qinv(
+    Q_pert, 
+    constr = list(A = matrix(1, 1, node_object$group_size), e = 0)
+  )
+  
+  #Compute the geometric mean of the variances, which are on the diagonal of Q.inv
+  scaling_factor = exp(mean(log(diag(Q_inv))))
+  
+  return(scaling_factor)
 }

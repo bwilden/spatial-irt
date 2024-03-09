@@ -1,0 +1,51 @@
+---
+title: "BYM2-MrP-IRT"
+author: "Bertrand Wilden"
+date: "`r Sys.Date()`"
+format:
+  pdf:
+    documentclass: article
+    number-sections: true
+    geometry: 
+      - left=25mm
+      - right=25mm
+    indent: true
+    fontsize: 11pt
+    linestretch: 2
+    fig-cap-location: top
+    include-in-header:
+      text:
+        \usepackage{amsmath}
+        \usepackage{bm}
+bibliography: [references.bib, packages.bib]
+nocite : |
+  @R-dplyr, @R-ggplot2, @R-targets, @R-cmdstanr, @R-here, @R-readr, @R-stantargets, @R-tidyr, @R-stringr, @R-ipumsr, @R-geostan
+execute: 
+  echo: false
+  message: false
+  warning: false
+---
+
+```{r}
+library(targets)
+library(dplyr)
+library(ggplot2)
+library(MetBrewer)
+library(cmdstanr)
+
+knitr::write_bib(.packages(), "packages.bib")
+```
+
+# Introduction
+
+# IRT
+
+# MRP
+
+# BYM2
+
+# Conclusion
+
+@carpenter2017
+
+# References

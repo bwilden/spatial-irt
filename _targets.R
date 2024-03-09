@@ -10,9 +10,10 @@ tar_option_set(
                "brms",
                "tidybayes",
                "stringr",
-               "ccesMRPprep",
-               "ipumsr"),
-  seed = 111
+               "ipumsr",
+               "INLA",
+               "geostan"),
+  seed = 123
 )
 
 options(mc.cores = 8)
@@ -22,7 +23,20 @@ tar_source("R")
 list(
   tar_target(
     data_years,
-    2021:2022
+    2020:2021
+  ),
+  tar_target(
+    county_pres_vote_file,
+    here::here("data-raw", "countypres_2000-2020.csv"),
+    format = "file"
+  ),
+  tar_target(
+    county_pres_vote,
+    readr::read_csv(county_pres_vote_file)
+  ),
+  tar_target(
+    county_data,
+    clean_county_data(county_pres_vote) 
   ),
   tar_target(
     ces_policy_file,
@@ -44,7 +58,8 @@ list(
   ),
   tar_target(
     ces_policy_qs,
-    c("abortion_always",
+    c(
+      "abortion_always",
       "abortion_20weeks",
       "enviro_carbon",
       "enviro_renewable",
@@ -70,7 +85,7 @@ list(
   # Create poststratification table
   tar_target(
     poststrat_vars,
-    c("SEX", "AGE", "RACE", "HISPAN", "CITIZEN", "EDUC", "COUNTYFIP", "PUMA")
+    c("SEX", "AGE", "RACE", "HISPAN", "CITIZEN", "EDUC", "HHINCOME", "PUMA")
   ),
   tar_target(
     ca_ipums,
@@ -91,13 +106,25 @@ list(
                                puma_county_crosswalk)
   ),
   tar_target(
-    postrat_table,
-    make_poststrat_table(ca_ipums_counties)
+    postrat_df,
+    make_poststrat_table(ca_ipums_counties) %>% 
+      filter(county_fips %in% ces$county_fips)
+  ),
+  
+  tar_target(
+    ca_county_geos,
+    tigris::counties(state = "CA")
   ),
   tar_target(
-    postrat_df,
-    postrat_table %>% 
-      filter(county_fips %in% ces$county_fips)
+    county_nodes,
+    ca_county_geos %>% 
+      arrange(NAME) %>% 
+      geostan::shape2mat(style = "B") %>% 
+      geostan::prep_icar_data()
+  ),
+  tar_target(
+    scaling_factor,
+    calc_scaling_factor(county_nodes)
   ),
   
   tar_target(
@@ -105,30 +132,47 @@ list(
     list(J = length(unique(ces$participant)), 
          K = length(unique(ces$question)), 
          N = nrow(ces), 
-         C = length(unique(ces$county_fips)),
-         P = nrow(postrat_df),
-         A = length(unique(ces$age)),
-         R = length(unique(ces$race)),
-         E = length(unique(ces$educ)),
+         N_ages = length(unique(ces$age)),
+         N_races = length(unique(ces$race)),
+         N_educs = length(unique(ces$educ)),
+         N_hhincs = length(unique(ces$hhinc)),
+         N_regions = length(unique(county_data$region)),
+         
+         P_cells = nrow(postrat_df),
+         
          participant = as.numeric(as.factor(ces$participant)), 
          question = as.numeric(ces$question), 
          county = as.numeric(as.factor(ces$county_fips)),
          age = as.numeric(ces$age),
          race = as.numeric(ces$race),
          educ = as.numeric(ces$educ),
+         hhinc = as.numeric(ces$hhinc),
          gender = as.numeric(ces$gender),
+         
+         region = as.numeric(as.factor(county_data$region)),
+         repvote = county_data$repvote,
+         
+         y = ces$response,
+         
+         N_edges = county_nodes$n_edges,
+         node1 = county_nodes$node1,
+         node2 = county_nodes$node2,
+         scaling_factor = scaling_factor,
+         
          postrat_county = as.numeric(as.factor(postrat_df$county_fips)),
-         postrat_age = as.numeric(postrat_df$age),
-         postrat_race = as.numeric(postrat_df$race),
-         postrat_educ = as.numeric(postrat_df$educ),
-         postrat_gender = as.numeric(postrat_df$gender),
-         y = ces$response)
+         postrat_age = postrat_df$age,
+         postrat_race = postrat_df$race,
+         postrat_educ = postrat_df$educ,
+         postrat_hhinc = postrat_df$hhinc,
+         postrat_gender = postrat_df$gender)
   ),
   tar_stan_mcmc(
     ideal_mrp_fit,
     stan_file = here::here("stan", "ideal_mrp.stan"),
     data = ideal_mrp_data_list,
     quiet = FALSE, 
-    threads_per_chain = 2
+    threads_per_chain = 2,
+    cpp_options = list(stan_threads = TRUE),
+    # adapt_delta = .95
   )
 )
