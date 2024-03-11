@@ -23,7 +23,7 @@ tar_source("R")
 list(
   tar_target(
     data_years,
-    2020:2021
+    2019:2021
   ),
   tar_target(
     county_pres_vote_file,

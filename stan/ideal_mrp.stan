@@ -127,7 +127,7 @@ model {
   mu_gamma ~ normal(0, 2); // prior for mu_gamma
   sigma_gamma ~ normal(0, 1); // prior for sigma_gamma
 
-  theta_county_raw ~ normal(0, 5); 
+  theta_county_raw ~ std_normal();
   theta_age_raw ~ std_normal(); // implies theta_age ~ normal(0, sigma_age)
   theta_race_raw ~ std_normal(); // implies theta_race ~ normal(0, sigma_race)
   theta_educ_raw ~ std_normal(); // implies theta_educ ~ normal(0, sigma_educ)
@@ -163,5 +163,4 @@ generated quantities{
   vector[58] county_only_pred;
   for (c in 1:58)
     county_only_pred[c] = theta_region[region[c]] + beta_repvote*repvote[c];
-
 }
