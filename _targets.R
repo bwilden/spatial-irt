@@ -11,6 +11,7 @@ tar_option_set(
                "tidybayes",
                "stringr",
                "ipumsr",
+               "ggplot2",
                "INLA",
                "geostan"),
   seed = 123
@@ -174,5 +175,27 @@ list(
     threads_per_chain = 2,
     cpp_options = list(stan_threads = TRUE),
     # adapt_delta = .95
+  ),
+  
+  tar_target(
+    draws_list,
+    assemble_draws(ideal_mrp_fit_draws_ideal_mrp)
+  ),
+  tar_target(
+    county_ideal_df,
+    poststratify_county_thetas(
+      draws_list = draws_list,
+      survey_data = ces,
+      postrat_data = postrat_df,
+      county_data = ca_county_geos
+    )
+  ),
+  tar_target(
+    county_est_plot,
+    make_county_est_plot(county_ideal_df)
+  ),
+  tar_target(
+    county_map,
+    make_county_map(county_ideal_df)
   )
 )

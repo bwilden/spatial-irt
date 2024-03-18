@@ -149,7 +149,7 @@ model {
   
   for (n in 1:N)
     y[n] ~ bernoulli_logit(gamma_adj[question[n]] * 
-    (theta_adj[participant[n]] - beta_adj[question[n]]));
+    theta_adj[participant[n]] + beta_adj[question[n]]);
 }
 
 generated quantities{
