@@ -8,14 +8,14 @@ assemble_draws <- function(fit_draws) {
       as.matrix(),
     sigma_theta = fit_draws$sigma_theta,
     county_only_pred = fit_draws %>% 
-      select(starts_with("county_only_pred")) %>%
+      select(starts_with("county_only_pred")) %>% 
       pivot_longer(cols = starts_with("county_only_pred"),
                    names_to = "county_fips",
                    names_pattern = "county_only_pred\\[(\\d+)\\]",
                    names_transform = list(cell = as.integer),
                    values_to = "idealpoint") %>% 
-      reframe(idealpoint_mean = mean(idealpoint),
-              idealpoint_sd = sd(idealpoint),
+      reframe(c_idealpoint_mean = mean(idealpoint),
+              c_idealpoint_sd = sd(idealpoint),
               .by = county_fips)
   )
   return(draws_list)
@@ -64,12 +64,40 @@ poststratify_county_thetas <- function(draws_list,
     i = i + 1
   }
   
+  # county_ideal_df <- county_ideal_df %>% 
+  #   mutate(county_fips = as.character(row_number())) %>% 
+  #   right_join(draws_list$county_only_pred, county_ideal_df,
+  #              by = "county_fips") %>% 
+  #   mutate(idealpoint_mean = if_else(is.na(idealpoint_mean), 
+  #                                    c_idealpoint_mean, idealpoint_mean),
+  #          idealpoint_sd = if_else(is.na(idealpoint_sd), 
+  #                                  c_idealpoint_sd, idealpoint_sd))
+  
   # add county meta data in
-  county_ideal_df <- county_ideal_df %>% 
-    left_join(county_data, 
-              by = c("county_fips" = "GEOID")) %>% 
-    arrange(idealpoint_mean) %>% 
+  county_ideal_df <- county_ideal_df %>%
+    right_join(county_data, by = c("county_fips" = "GEOID")) %>%
+    mutate(# messed up polarity
+      idealpoint_mean = -idealpoint_mean) %>% 
+    arrange(idealpoint_mean) %>%
     mutate(name = forcats::fct_inorder(NAME))
   
   return(county_ideal_df)
+}
+
+
+tally_county_thetas <- function(fit, survey_data) {
+  thetas <- coef(fit)$participant %>% 
+    as.data.frame() %>% 
+    tibble::rownames_to_column(var = "participant") %>% 
+    as_tibble() %>% 
+    select(participant, theta = Estimate.theta_Intercept,
+           theta_sd = Est.Error.theta_Intercept)
+  
+  county_thetas <- thetas %>% 
+    left_join(survey_data, by = "participant") %>% 
+    summarise(theta_county = mean(theta, na.rm = TRUE),
+              theta_sd = sd(theta, na.rm = TRUE),
+              .by = county_fips)
+  
+  return(county_thetas)
 }
