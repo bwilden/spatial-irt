@@ -102,7 +102,7 @@ list(
   ),
   tar_target(
    puma_county_crosswalk_file,
-   here::here("data-raw", "geocorr2022_2405102579.csv"),
+   here::here("data-raw", "geocorr2022_2415106420.csv"),
    format = "file"
   ),
   tar_target(
@@ -198,38 +198,38 @@ list(
     )
   ),
   
-  tar_target(
-    ideal_fit,
-    brm(
-      bf(response ~ exp(loggamma) * theta + beta,
-         theta ~ (1 | participant),
-         beta ~ (1 | question),
-         loggamma ~ (1 | question),
-         nl = TRUE,
-         family = bernoulli(link = "logit")),
-      prior = prior(normal(0, 2), class = "b", nlpar = "theta") +
-        prior(normal(0, 2), class = "b", nlpar = "beta") +
-        prior(normal(0, 2), class = "b", nlpar = "loggamma"),
-      data = ces,
-      cores = 8,
-      threads = threading(2),
-      backend = "cmdstanr",
-      silent = 0
-    )
-  ),
-  tar_target(
-    county_theta_df,
-    tally_county_thetas(fit = ideal_fit,
-                        survey_data = ces)
-  ),
+  # tar_target(
+  #   ideal_fit,
+  #   brm(
+  #     bf(response ~ exp(loggamma) * theta + beta,
+  #        theta ~ (1 | participant),
+  #        beta ~ (1 | question),
+  #        loggamma ~ (1 | question),
+  #        nl = TRUE,
+  #        family = bernoulli(link = "logit")),
+  #     prior = prior(normal(0, 2), class = "b", nlpar = "theta") +
+  #       prior(normal(0, 2), class = "b", nlpar = "beta") +
+  #       prior(normal(0, 2), class = "b", nlpar = "loggamma"),
+  #     data = ces,
+  #     cores = 8,
+  #     threads = threading(2),
+  #     backend = "cmdstanr",
+  #     silent = 0
+  #   )
+  # ),
+  # tar_target(
+  #   county_theta_df,
+  #   tally_county_thetas(fit = ideal_fit,
+  #                       survey_data = ces)
+  # ),
   
   tar_target(
     plot_data,
     county_ideal_df %>% 
       left_join(county_data, by = "county_fips") %>% 
       left_join(county_index_df, by = "county_fips") %>% 
-      left_join(county_theta_df, by = "county_fips") %>% 
-      mutate(across(c(idealpoint_mean, repvote, index_mean, theta_county),
+      # left_join(county_theta_df, by = "county_fips") %>% 
+      mutate(across(c(idealpoint_mean, repvote, index_mean),
                     ~scale(.x)[,1]))
   ),
   tar_target(
@@ -237,7 +237,7 @@ list(
     plot_data %>% 
       arrange(idealpoint_mean) %>% 
       mutate(name = forcats::fct_inorder(NAME)) %>% 
-      pivot_longer(cols = c(idealpoint_mean, repvote, index_mean, theta_county),
+      pivot_longer(cols = c(idealpoint_mean, repvote, index_mean),
                    names_to = "method",
                    values_to = "mean")
   ),
@@ -248,11 +248,10 @@ list(
   tar_target(
     county_map,
     list(plot_data_long %>% filter(method == "idealpoint_mean"),
-         plot_data_long %>% filter(method == "theta_county"),
+         # plot_data_long %>% filter(method == "theta_county"),
          plot_data_long %>% filter(method == "index_mean"),
          plot_data_long %>% filter(method == "repvote")) %>% 
       map2(c(expression(theta[c]^{MRP}), 
-             "Simple IRT",
              "Scaled Additive Index", 
              "Scaled Republican\n2020 Presidential\nVote Share"),
            make_county_map)
@@ -261,7 +260,7 @@ list(
     county_quad_map,
     plot_data_long %>% 
       mutate(method = case_when(method == "idealpoint_mean" ~ "IRT-MRP Model",
-                                method == "theta_county" ~ "Simple IRT Model",
+                                # method == "theta_county" ~ "Simple IRT Model",
                                 method == "index_mean" ~ "Additive Index",
                                 method == "repvote" ~ "Republican 2020\nPresidential Vote Share"),
              method = factor(method,
