@@ -1,0 +1,19 @@
+---
+title: "The Geography of Ideology in California"
+format: gfm
+execute: 
+  echo: false
+  message: false
+  warning: false
+---
+
+```{r}
+library(targets)
+library(ggplot2)
+```
+
+```{r}
+tar_load(county_quad_map)
+county_quad_map
+```
+
