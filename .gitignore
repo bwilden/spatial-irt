@@ -4,3 +4,7 @@
 .Ruserdata
 data-raw/
 _targets/
+test.R
+models.R
+hier-bym2-sim.R
+icar*
