@@ -31,9 +31,38 @@ incorporating this spatial autocorrelation.[^2]
 
 ## Results
 
+Below are the results of the full **IRT-MRP-BYM** model for the county
+ideology parameter $\theta_c^{MRP}$. The coastal counties of San Mateo,
+Marin, and Ventura are among the most liberal, whereas the most
+conservative counties are in the Central Valley (Kern, Merced).
+
 ![](README_files/figure-commonmark/unnamed-chunk-2-1.png)
+
+In contrast to the $\theta_c^{MRP}$ model estimates, if we were to
+construct a simple additive scale of ideology based on the thirteen
+survey questions (scaled), we get a very different picture of
+Californian politics. According to the additive index, Mariposa (dark
+green in the center of the map) is the most liberal county in the state.
+This defies common sense for a county which has voted for the Republican
+candidate every year since 1992.[^3]
+
+![](README_files/figure-commonmark/unnamed-chunk-3-1.png)
+
+## Notes
+
+- For the full paper:
+  [paper.qmd](https://github.com/bwilden/spatial-irt/blob/main/paper.pdf)
+- For the full model code in Stan:
+  [ideal_mrp.stan](https://github.com/bwilden/spatial-irt/blob/main/stan/ideal_mrp.stan)
+- For R code and cleaning steps:
+  [\_targets.R](https://github.com/bwilden/spatial-irt/blob/main/_targets.R)
+  and [R files](https://github.com/bwilden/spatial-irt/tree/main/R)
 
 [^1]: I’m open to any suggestions on a catchier name.
 
 [^2]: See [Gao, Kennedy, Simpson, and Gelman
     2020](https://arxiv.org/abs/1908.06716) for using BYM in MRP models.
+
+[^3]: MIT Election Data and Science Lab, 2018, “County Presidential
+    Election Returns 2000-2020”, <https://doi.org/10.7910/DVN/VOQCHQ>,
+    Harvard Dataverse, V12.
