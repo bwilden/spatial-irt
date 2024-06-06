@@ -10,6 +10,12 @@ execute:
 ```{r}
 library(targets)
 library(ggplot2)
+library(dplyr)
+library(MetBrewer)
+
+tar_source("R")
+
+tar_load(plot_data_long)
 ```
 
 In this project I estimate county-level political ideology in California using a new model I develop called **IRT-MRP-BYM**---*Item-Response-Theory, Multilevel-Regression-with-Poststratification, Besag-York-Mollié* model.[^1] 
@@ -29,9 +35,22 @@ In this project I estimate county-level political ideology in California using a
 Below are the results of the full **IRT-MRP-BYM** model for the county ideology parameter $\theta_c^{MRP}$. The coastal counties of San Mateo, Marin, and Ventura are among the most liberal, whereas the most conservative counties are in the Central Valley (Kern, Merced).
 
 ```{r}
-tar_load(county_map)
-county_map[[1]] +
-  labs(title = "IRT-MRP-BYM model")
+plot_data_long |> 
+  filter(method == "idealpoint_mean") |> 
+  sf::st_as_sf() |> 
+  ggplot(aes(fill = mean)) +
+    geom_sf(color = "gray30") +
+    scale_fill_gradientn(
+      colours = c(met.brewer("Isfahan1")[8], 
+                  # met.brewer("Isfahan1")[6],
+                  "gray",
+                  met.brewer("Isfahan1")[2]),
+      values = c(0, .37, 1),
+    ) +
+    theme_void() +
+    labs(fill = expression(theta[c]^{MRP}),
+         title = "IRT-MRP-BYM Model") +
+    theme(legend.position = "left")
 ```
 
 In contrast to the $\theta_c^{MRP}$ model estimates, if we were to construct a simple additive scale of ideology based on the thirteen survey questions (scaled), we get a very different picture of Californian politics. According to the additive index, Mariposa (dark green in the center of the map) is the most liberal county in the state. This defies common sense for a county which has voted for the Republican candidate every year since 1992.[^3]
@@ -39,12 +58,26 @@ In contrast to the $\theta_c^{MRP}$ model estimates, if we were to construct a s
 [^3]: MIT Election Data and Science Lab, 2018, "County Presidential Election Returns 2000-2020", <https://doi.org/10.7910/DVN/VOQCHQ>, Harvard Dataverse, V12.
 
 ```{r}
-county_map[[2]] +
-  labs(title = "Additive Index of Survey Questions")
+plot_data_long |> 
+  filter(method == "index_mean") |> 
+  sf::st_as_sf() |> 
+  ggplot(aes(fill = mean)) +
+    geom_sf(color = "gray30") +
+    scale_fill_gradientn(
+      colours = c(met.brewer("Isfahan1")[8], 
+                  # met.brewer("Isfahan1")[6],
+                  "gray",
+                  met.brewer("Isfahan1")[2]),
+      values = c(0, .37, 1),
+    ) +
+    theme_void() +
+    labs(fill = expression(theta[c]^{MRP}),
+         title = "Additive Index") +
+    theme(legend.position = "left")
 ```
 
 ## Notes
 
-- For the full paper: [paper.qmd](https://github.com/bwilden/spatial-irt/blob/main/paper.pdf)
-- For the full model code in Stan: [ideal_mrp.stan](https://github.com/bwilden/spatial-irt/blob/main/stan/ideal_mrp.stan)
-- For R code and cleaning steps: [_targets.R](https://github.com/bwilden/spatial-irt/blob/main/_targets.R) and [R files](https://github.com/bwilden/spatial-irt/tree/main/R)
+- Full paper: [paper.qmd](https://github.com/bwilden/spatial-irt/blob/main/paper.pdf)
+- Model code in Stan: [ideal_mrp.stan](https://github.com/bwilden/spatial-irt/blob/main/stan/ideal_mrp.stan)
+- R code and cleaning steps: [_targets.R](https://github.com/bwilden/spatial-irt/blob/main/_targets.R) and [R files](https://github.com/bwilden/spatial-irt/tree/main/R)

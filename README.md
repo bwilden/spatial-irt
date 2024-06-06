@@ -50,11 +50,11 @@ candidate every year since 1992.[^3]
 
 ## Notes
 
-- For the full paper:
+- Full paper:
   [paper.qmd](https://github.com/bwilden/spatial-irt/blob/main/paper.pdf)
-- For the full model code in Stan:
+- Model code in Stan:
   [ideal_mrp.stan](https://github.com/bwilden/spatial-irt/blob/main/stan/ideal_mrp.stan)
-- For R code and cleaning steps:
+- R code and cleaning steps:
   [\_targets.R](https://github.com/bwilden/spatial-irt/blob/main/_targets.R)
   and [R files](https://github.com/bwilden/spatial-irt/tree/main/R)
 
