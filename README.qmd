@@ -50,7 +50,7 @@ plot_data_long |>
     ) +
     theme_void() +
     labs(fill = expression(theta[c]^{MRP}),
-         title = "IRT-MRP-BYM Model") +
+         title = "IRT-MRP-BYM Model Political Ideology") +
     theme(legend.position = "left")
 ```
 
@@ -73,8 +73,8 @@ plot_data_long |>
       values = c(0, .37, 1),
     ) +
     theme_void() +
-    labs(fill = expression(theta[c]^{MRP}),
-         title = "Additive Index") +
+    labs(fill = "Scaled\nAdditive\nIndex",
+         title = "Survey Additive Index Political Ideology") +
     theme(legend.position = "left")
 ```
 
