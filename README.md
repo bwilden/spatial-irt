@@ -41,11 +41,13 @@ data-fig-align="center" />
 
 In contrast to the $\theta_c^{MRP}$ model estimates, if we were to
 construct a simple additive scale of ideology based on the thirteen
-survey questions (scaled), we get a very different picture of
-Californian politics. According to the additive index, Mariposa (dark
-green in the center of the map) is the most liberal county in the state.
-This defies common sense for a county which has voted for the Republican
-candidate every year since 1992.[^3]
+survey questions, we get a very different picture of Californian
+politics. According to the additive index, Mariposa (dark green in the
+center of the map) is the most liberal county in the state. This defies
+common sense for a county which has voted for the Republican candidate
+every year since 1992![^3] Without the regularization provided by MRP +
+BYM, small geographic units are apt to produce completely unreliable
+estimates.
 
 <img src="README_files/figure-commonmark/unnamed-chunk-3-1.png"
 data-fig-align="center" />
@@ -53,7 +55,7 @@ data-fig-align="center" />
 ## Notes
 
 - Full paper:
-  [paper.qmd](https://github.com/bwilden/spatial-irt/blob/main/paper.pdf)
+  [paper.pdf](https://github.com/bwilden/spatial-irt/blob/main/paper.pdf)
 - Model code in Stan:
   [ideal_mrp.stan](https://github.com/bwilden/spatial-irt/blob/main/stan/ideal_mrp.stan)
 - R code and cleaning steps:
