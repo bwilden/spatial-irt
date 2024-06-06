@@ -35,6 +35,7 @@ In this project I estimate county-level political ideology in California using a
 Below are the results of the full **IRT-MRP-BYM** model for the county ideology parameter $\theta_c^{MRP}$. The coastal counties of San Mateo, Marin, and Ventura are among the most liberal, whereas the most conservative counties are in the Central Valley (Kern, Merced).
 
 ```{r}
+#| fig-align: center
 plot_data_long |> 
   filter(method == "idealpoint_mean") |> 
   sf::st_as_sf() |> 
@@ -58,6 +59,7 @@ In contrast to the $\theta_c^{MRP}$ model estimates, if we were to construct a s
 [^3]: MIT Election Data and Science Lab, 2018, "County Presidential Election Returns 2000-2020", <https://doi.org/10.7910/DVN/VOQCHQ>, Harvard Dataverse, V12.
 
 ```{r}
+#| fig-align: center
 plot_data_long |> 
   filter(method == "index_mean") |> 
   sf::st_as_sf() |> 

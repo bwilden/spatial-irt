@@ -36,7 +36,8 @@ ideology parameter $\theta_c^{MRP}$. The coastal counties of San Mateo,
 Marin, and Ventura are among the most liberal, whereas the most
 conservative counties are in the Central Valley (Kern, Merced).
 
-![](README_files/figure-commonmark/unnamed-chunk-2-1.png)
+<img src="README_files/figure-commonmark/unnamed-chunk-2-1.png"
+data-fig-align="center" />
 
 In contrast to the $\theta_c^{MRP}$ model estimates, if we were to
 construct a simple additive scale of ideology based on the thirteen
@@ -46,7 +47,8 @@ green in the center of the map) is the most liberal county in the state.
 This defies common sense for a county which has voted for the Republican
 candidate every year since 1992.[^3]
 
-![](README_files/figure-commonmark/unnamed-chunk-3-1.png)
+<img src="README_files/figure-commonmark/unnamed-chunk-3-1.png"
+data-fig-align="center" />
 
 ## Notes
 
